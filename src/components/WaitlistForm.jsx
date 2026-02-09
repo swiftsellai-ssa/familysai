@@ -3,24 +3,49 @@ import { Send, CheckCircle } from 'lucide-react';
 
 const WaitlistForm = () => {
     const [email, setEmail] = useState('');
+    const [message, setMessage] = useState('');
     const [status, setStatus] = useState('idle'); // idle, loading, success, error
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         setStatus('loading');
 
-        // Simulate API call
-        setTimeout(() => {
-            setStatus('success');
-            setEmail('');
-        }, 1500);
+        try {
+            const response = await fetch("https://api.web3forms.com/submit", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    access_key: "ff55b387-3925-4b8e-9709-732d79b594fa", // Placeholder
+                    email: email,
+                    message: message,
+                    subject: "New Waitlist Submission (FamilyAI)"
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                setStatus('success');
+                setEmail('');
+                setMessage('');
+            } else {
+                console.error("Submission failed", data);
+                setStatus('error');
+            }
+        } catch (error) {
+            console.error("Submission error", error);
+            setStatus('error');
+        }
     };
 
     return (
-        <section className="py-24 px-6 relative overflow-hidden">
+        <section className="py-24 px-6 relative overflow-hidden" id="waitlist">
             <div className="absolute inset-0 bg-gradient-to-b from-transparent to-indigo-50/50 -z-10"></div>
 
-            <div className="max-w-2xl mx-auto text-center glass-panel p-10 md:p-14 rounded-[2rem]">
+            <div className="max-w-2xl mx-auto text-center glass-panel p-8 md:p-14 rounded-[2rem]">
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-800">
                     Ready to reclaim your peace?
                 </h2>
@@ -29,39 +54,66 @@ const WaitlistForm = () => {
                 </p>
 
                 {status === 'success' ? (
-                    <div className="flex flex-col items-center justify-center p-6 bg-green-50 rounded-2xl border border-green-100 animate-fade-in-up">
-                        <CheckCircle className="w-12 h-12 text-green-500 mb-4" />
-                        <h3 className="text-xl font-semibold text-green-800">You're on the list!</h3>
-                        <p className="text-green-600">We'll be in touch soon.</p>
+                    <div className="flex flex-col items-center justify-center p-8 bg-green-50/50 rounded-2xl border border-green-100 animate-fade-in-up">
+                        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+                            <CheckCircle className="w-8 h-8 text-green-600" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-slate-800 mb-2">You're on the list!</h3>
+                        <p className="text-slate-600 text-lg max-w-md mx-auto">
+                            We'll reach out soon to help you reclaim your mental space.
+                        </p>
                     </div>
                 ) : (
-                    <form onSubmit={handleSubmit} className="flex flex-col sm:flex-row gap-4">
-                        <input
-                            type="email"
-                            placeholder="Enter your email"
-                            required
-                            value={email}
-                            onChange={(e) => setEmail(e.target.value)}
-                            className="flex-1 px-6 py-4 rounded-xl border border-slate-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-lg"
-                            disabled={status === 'loading'}
-                        />
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-lg mx-auto">
+                        <div className="flex flex-col text-left">
+                            <label htmlFor="email" className="sr-only">Email Address</label>
+                            <input
+                                id="email"
+                                type="email"
+                                placeholder="Your email address"
+                                required
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                className="w-full px-6 py-4 rounded-xl border border-slate-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-lg min-h-[56px]"
+                                disabled={status === 'loading'}
+                            />
+                        </div>
+
+                        <div className="flex flex-col text-left">
+                            <label htmlFor="message" className="sr-only">Your #1 Review Stressor</label>
+                            <textarea
+                                id="message"
+                                placeholder="What is your #1 parenting stressor?"
+                                value={message}
+                                onChange={(e) => setMessage(e.target.value)}
+                                className="w-full px-6 py-4 rounded-xl border border-slate-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-lg min-h-[120px] resize-none"
+                                disabled={status === 'loading'}
+                            />
+                        </div>
+
                         <button
                             type="submit"
                             disabled={status === 'loading'}
-                            className="px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold text-lg shadow-lg hover:bg-indigo-700 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
+                            className="w-full px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold text-lg shadow-lg hover:bg-indigo-700 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 min-h-[56px]"
                         >
                             {status === 'loading' ? (
-                                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                                <span className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                             ) : (
                                 <>
-                                    Join Now <Send className="w-5 h-5" />
+                                    Join the Waitlist <Send className="w-5 h-5" />
                                 </>
                             )}
                         </button>
+
+                        {status === 'error' && (
+                            <p className="text-red-500 text-sm mt-2">
+                                Something went wrong. Please try again.
+                            </p>
+                        )}
                     </form>
                 )}
 
-                <p className="mt-6 text-sm text-slate-500">
+                <p className="mt-8 text-sm text-slate-500">
                     No spam, ever. Unsubscribe anytime.
                 </p>
             </div>
