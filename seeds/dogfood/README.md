@@ -28,7 +28,7 @@ migrations and does not invent `database_id`.
 | child | `kid_8` on `members` (`role=child`, label only). No child identity table. |
 | kiosk PIN | `0000`, **Playwright-only**. SHA-256(`playwright_kiosk_v1` \|\| `0000`) hex. |
 | session | `sess_dogfood_local`, expires 2099-01-01, `kiosk=0` |
-| optional fixture | one meal `butter-chicken` (`leftovers` SQL `1`), one week `week-01` |
+| optional fixture | one meal `butter-chicken` (`leftovers` SQL `1`), one week `week-01`, one pending stamp `st_20260829_ww2-poster` (kid_8) |
 
 `DOFOOD_EMAIL` is a PR-7 ops fill-in (operator mailbox). It is **not** this fake
 address and is not written into git.
@@ -57,7 +57,7 @@ Until that HMAC exists, a test can:
 3. After PR-7: set `fk_session` to `sess_dogfood_local.<hmac>` using the local
    `SESSION_SECRET` from `.dev.vars`. Do not invent a production secret here.
 
-Until PR-7 HMAC wrapping, wrangler dev uses the raw id: set cookie `fk_session=sess_dogfood_local` (`document.cookie = 'fk_session=sess_dogfood_local; Path=/'`) then open `/app/rules`. No `AUTH=off`.
+Until PR-7 HMAC wrapping, wrangler dev uses the raw id: set cookie `fk_session=sess_dogfood_local` (`document.cookie = 'fk_session=sess_dogfood_local; Path=/'`) then open `/app/rules` or `/stamps/new` (alias `/app/stamps/new`). No `AUTH=off`.
 
 To mint an extra local session later (still `--local` only):
 
@@ -83,4 +83,4 @@ Oceania hint (KD-12) is not AU residency. Do not invent an account ID.
 
 Small examples matching the file-layer shapes live next to this README
 (`household.yaml`, `meals/canon/butter-chicken.yaml`, `meals/weeks/week-01.yaml`,
-`rules/house.md`). Default printable card: [`../house.md`](../house.md).
+`rules/house.md`, `stamps/st_20260829_ww2-poster.yaml`). Default printable card: [`../house.md`](../house.md).

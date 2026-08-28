@@ -94,3 +94,17 @@ INSERT INTO sessions (
   '2099-01-01T00:00:00.000Z',
   0
 );
+
+-- Optional pending stamp so the study-PC form has a row to look at.
+-- Accept / inbox / kiosk are PR-8. This is the three-field fixture only.
+INSERT INTO stamps (
+  household_id, id, member_id, title, used_ai_for, checked_against, status
+) VALUES (
+  'hid_dogfood_local',
+  'st_20260829_ww2-poster',
+  'kid_8',
+  'WW2 poster',
+  '["wording"]',
+  'textbook chapter 4',
+  'pending'
+);
