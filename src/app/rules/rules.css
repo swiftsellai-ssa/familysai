@@ -1,0 +1,378 @@
+/* /app/rules — kitchen/study clipboard card. Not the waitlist palette. */
+
+html.fk-rules,
+html.fk-rules body {
+  min-height: 100%;
+  background: #cfc0a6;
+  color: #241c14;
+  font-family: "Source Serif 4", "Iowan Old Style", Palatino, "Palatino Linotype", serif;
+}
+
+.fk-rules-desk {
+  --ink: #241c14;
+  --paper: #f4ead3;
+  --paper-shadow: #d9c7a3;
+  --plaster: #cfc0a6;
+  --stamp: #7a2e24;
+  --brass: #8a6a3b;
+  min-height: 100vh;
+  padding: 2.4rem 1.2rem 3.5rem;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #ddd0b8 0%, transparent 55%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(70, 50, 30, 0.03) 0 1px,
+      transparent 1px 7px
+    ),
+    var(--plaster);
+  color: var(--ink);
+}
+
+.fk-rules-mast {
+  max-width: 44rem;
+  margin: 0 auto 1.4rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.fk-rules-kicker {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+  color: #5a4630;
+}
+
+.fk-rules-actions {
+  display: flex;
+  gap: 0.55rem;
+  align-items: center;
+}
+
+.fk-rules-btn {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--paper);
+  color: var(--ink);
+  border: 1.5px solid var(--ink);
+  padding: 0.45rem 0.9rem 0.4rem;
+  cursor: pointer;
+  box-shadow: 1px 2px 0 var(--ink);
+}
+
+.fk-rules-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 0 1px 0 var(--ink);
+}
+
+.fk-rules-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 1px 2px 0 var(--ink);
+}
+
+.fk-rules-btn.print {
+  background: var(--ink);
+  color: var(--paper);
+  box-shadow: 1px 2px 0 #5a4630;
+}
+
+.fk-rules-status {
+  font-size: 0.85rem;
+  font-style: italic;
+  color: #5a4630;
+  min-height: 1.2em;
+}
+
+.fk-rules-stage {
+  position: relative;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.fk-rules-clip {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  z-index: 3;
+  width: 52px;
+  height: 36px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.fk-rules-clip-top {
+  width: 52px;
+  height: 22px;
+  border: 2.5px solid var(--ink);
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(#d8d3c8, #b7b0a2);
+}
+
+.fk-rules-clip-wire {
+  width: 18px;
+  height: 26px;
+  margin: -4px auto 0;
+  border: 2.5px solid var(--ink);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: #efe6d2;
+}
+
+.fk-rules-card {
+  position: relative;
+  background:
+    radial-gradient(ellipse 90px 50px at 18% 88%, rgba(90, 70, 40, 0.07), transparent 70%),
+    var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 2.6rem 2.2rem 2rem 2.4rem;
+  box-shadow:
+    0 1px 0 var(--paper-shadow),
+    8px 14px 28px rgba(50, 32, 12, 0.22);
+  transform: rotate(-0.35deg);
+}
+
+.fk-rules-card::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(36, 28, 20, 0.35);
+  pointer-events: none;
+}
+
+.fk-rules-stamp {
+  position: absolute;
+  top: 1.35rem;
+  right: 1.4rem;
+  width: 5.6rem;
+  height: 5.6rem;
+  border: 2px solid var(--stamp);
+  border-radius: 50%;
+  color: var(--stamp);
+  transform: rotate(-16deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  padding: 0.55rem;
+  opacity: 0.88;
+  z-index: 2;
+  mix-blend-mode: multiply;
+}
+
+.fk-rules-article {
+  position: relative;
+  z-index: 1;
+  padding-right: 1.2rem;
+}
+
+.fk-rules-article h1 {
+  font-family: "Fraunces", Palatino, serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-size: clamp(2.1rem, 5vw, 3.1rem);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  margin: 0.2rem 0 0.85rem;
+}
+
+.fk-rules-article h2,
+.fk-rules-article h3 {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  margin: 1rem 0 0.4rem;
+}
+
+.fk-rules-article > p {
+  font-size: 1.08rem;
+  line-height: 1.45;
+  font-style: italic;
+  margin: 0 0 1.4rem;
+  max-width: 32rem;
+}
+
+.fk-rules-article ol {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  counter-reset: rule;
+}
+
+.fk-rules-article ol li {
+  counter-increment: rule;
+  position: relative;
+  padding: 0.7rem 0 0.7rem 2.4rem;
+  font-size: 1.08rem;
+  line-height: 1.42;
+  border-top: 1px solid rgba(36, 28, 20, 0.45);
+}
+
+.fk-rules-article ol li:last-child {
+  border-bottom: 1px solid rgba(36, 28, 20, 0.45);
+}
+
+.fk-rules-article ol li::before {
+  content: counter(rule);
+  position: absolute;
+  left: 0;
+  top: 0.68rem;
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 700;
+  font-variant-numeric: oldstyle-nums;
+}
+
+.fk-rules-card-foot {
+  margin: 1.4rem 0 0;
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5a4630;
+}
+
+.fk-rules-editor {
+  max-width: 44rem;
+  margin: 1.6rem auto 0;
+}
+
+.fk-rules-editor label {
+  display: block;
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.45rem;
+  color: #5a4630;
+}
+
+.fk-rules-editor textarea {
+  width: 100%;
+  min-height: 16rem;
+  resize: vertical;
+  font-family: "Source Serif 4", Palatino, serif;
+  font-size: 0.98rem;
+  line-height: 1.55;
+  color: var(--ink);
+  background:
+    repeating-linear-gradient(
+      to bottom,
+      transparent 0,
+      transparent 1.5rem,
+      rgba(36, 28, 20, 0.12) 1.5rem,
+      rgba(36, 28, 20, 0.12) calc(1.5rem + 1px)
+    ),
+    #efe4c9;
+  border: 1.5px solid var(--ink);
+  padding: 0.85rem 1rem;
+  box-shadow: 3px 4px 0 rgba(36, 28, 20, 0.12);
+}
+
+.fk-rules-editor textarea:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.fk-rules-note {
+  max-width: 36rem;
+  margin: 4rem auto;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 2rem 1.8rem;
+  transform: rotate(-0.6deg);
+  box-shadow: 6px 10px 20px rgba(50, 32, 12, 0.18);
+}
+
+.fk-rules-note h1 {
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 1.8rem;
+  margin: 0 0 0.7rem;
+  letter-spacing: -0.02em;
+}
+
+.fk-rules-note p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.fk-rules-error {
+  color: var(--stamp);
+  font-style: italic;
+  margin-top: 0.4rem;
+}
+
+@media print {
+  @page {
+    size: auto;
+    margin: 12mm;
+  }
+
+  html.fk-rules,
+  html.fk-rules body {
+    background: #fff !important;
+    color: #000 !important;
+  }
+
+  .fk-rules-desk {
+    background: #fff !important;
+    padding: 0 !important;
+    min-height: 0 !important;
+  }
+
+  .no-print {
+    display: none !important;
+  }
+
+  .fk-rules-stage {
+    max-width: none;
+  }
+
+  .fk-rules-clip {
+    top: -8mm;
+  }
+
+  .fk-rules-card {
+    transform: none !important;
+    box-shadow: none !important;
+    background: #fff !important;
+    color: #000 !important;
+    border: 1.6pt solid #000 !important;
+    max-width: none;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .fk-rules-card::before {
+    border-color: #000 !important;
+  }
+
+  .fk-rules-stamp {
+    color: #000 !important;
+    border-color: #000 !important;
+    mix-blend-mode: normal;
+    opacity: 1;
+  }
+
+  .fk-rules-article ol li,
+  .fk-rules-article ol li:last-child {
+    border-color: #000 !important;
+  }
+
+  .fk-rules-card-foot {
+    color: #000 !important;
+  }
+}
