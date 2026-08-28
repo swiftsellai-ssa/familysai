@@ -1,43 +1,114 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Send, CheckCircle } from 'lucide-react';
+
+// Sitekey: Vite `import.meta.env.VITE_TURNSTILE_SITE_KEY` (see `.env`), which must
+// mirror wrangler.jsonc `vars.TURNSTILE_SITE_KEY`. The committed value is Cloudflare's
+// dummy always-pass sitekey for local/dev only — not a production widget key.
+// Production: set VITE_TURNSTILE_SITE_KEY at build to the real sitekey and
+// `npx wrangler secret put TURNSTILE_SECRET_KEY`. Never put the secret in the SPA.
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
 const WaitlistForm = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
     const [status, setStatus] = useState('idle'); // idle, loading, success, error
+    const [turnstileToken, setTurnstileToken] = useState('');
+    const widgetContainerRef = useRef(null);
+    const widgetIdRef = useRef(null);
+
+    const formVisible = status !== 'success';
+
+    useEffect(() => {
+        if (!formVisible || !TURNSTILE_SITE_KEY) return undefined;
+
+        let cancelled = false;
+
+        const renderWidget = () => {
+            if (cancelled || !widgetContainerRef.current || !window.turnstile) return;
+            if (widgetIdRef.current != null) {
+                window.turnstile.reset(widgetIdRef.current);
+                return;
+            }
+            widgetIdRef.current = window.turnstile.render(widgetContainerRef.current, {
+                sitekey: TURNSTILE_SITE_KEY,
+                action: 'waitlist',
+                theme: 'light',
+                appearance: 'always',
+                callback: (token) => setTurnstileToken(token),
+                'expired-callback': () => setTurnstileToken(''),
+                'error-callback': () => setTurnstileToken(''),
+            });
+        };
+
+        const onScriptLoad = () => renderWidget();
+        let script = document.querySelector('script[data-fk-turnstile]');
+        if (window.turnstile) {
+            renderWidget();
+        } else if (script) {
+            script.addEventListener('load', onScriptLoad);
+        } else {
+            script = document.createElement('script');
+            script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+            script.async = true;
+            script.defer = true;
+            script.dataset.fkTurnstile = '1';
+            script.addEventListener('load', onScriptLoad);
+            document.head.appendChild(script);
+        }
+
+        return () => {
+            cancelled = true;
+            if (script) script.removeEventListener('load', onScriptLoad);
+            if (widgetIdRef.current != null && window.turnstile) {
+                window.turnstile.remove(widgetIdRef.current);
+                widgetIdRef.current = null;
+            }
+        };
+    }, [formVisible]);
+
+    const resetTurnstile = () => {
+        setTurnstileToken('');
+        if (widgetIdRef.current != null && window.turnstile) {
+            window.turnstile.reset(widgetIdRef.current);
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setStatus('loading');
 
         try {
-            const response = await fetch("https://api.web3forms.com/submit", {
-                method: "POST",
+            const payload = {
+                email,
+                turnstileToken,
+            };
+            if (message.trim()) {
+                payload.message = message.trim();
+            }
+
+            const response = await fetch('/api/v1/waitlist', {
+                method: 'POST',
                 headers: {
-                    "Content-Type": "application/json",
-                    "Accept": "application/json"
+                    'Content-Type': 'application/json',
+                    Accept: 'application/json',
                 },
-                body: JSON.stringify({
-                    access_key: "ff55b387-3925-4b8e-9709-732d79b594fa", // Placeholder
-                    email: email,
-                    message: message,
-                    subject: "New Waitlist Submission (FamilyAI)"
-                })
+                body: JSON.stringify(payload),
             });
 
             const data = await response.json();
 
-            if (data.success) {
+            if (response.ok && data.ok === true) {
                 setStatus('success');
                 setEmail('');
                 setMessage('');
+                setTurnstileToken('');
             } else {
-                console.error("Submission failed", data);
                 setStatus('error');
+                resetTurnstile();
             }
-        } catch (error) {
-            console.error("Submission error", error);
+        } catch {
             setStatus('error');
+            resetTurnstile();
         }
     };
 
@@ -89,6 +160,10 @@ const WaitlistForm = () => {
                                 className="w-full px-6 py-4 rounded-xl border border-slate-200 bg-white/50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all text-lg min-h-[120px] resize-none"
                                 disabled={status === 'loading'}
                             />
+                        </div>
+
+                        <div className="flex justify-center" aria-hidden={!TURNSTILE_SITE_KEY}>
+                            <div ref={widgetContainerRef} />
                         </div>
 
                         <button

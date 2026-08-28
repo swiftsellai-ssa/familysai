@@ -19,14 +19,18 @@
 	},
 	"vars": {
 		"SIGNUPS_OPEN": "dogfood",
-		"MAILER": "resend"
+		"MAILER": "resend",
+		// Dummy always-pass Turnstile sitekey (Cloudflare test widget: 1x00000000000000000000AA).
+		// NOT a production widget key. Production: create a Turnstile widget, set this var to the
+		// real sitekey, and `npx wrangler secret put TURNSTILE_SECRET_KEY`.
+		"TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
 		// DOFOOD_EMAIL is a PR-7 ops fill-in; do not invent the mailbox here.
 	},
 	"d1_databases": [
 		{
 			"binding": "DB",
 			"database_name": "family-kit",
-			// database_id: run npx wrangler d1 create family-kit --location=oc then paste the UUID. Do not invent one. No SQL migrations in this PR.
+			// database_id: run npx wrangler d1 create family-kit --location=oc then paste the UUID. Do not invent one. Local: wrangler d1 migrations apply family-kit --local. Remote apply after database_id exists (PR-1 ops).
 			"migrations_dir": "migrations"
 		}
 	]

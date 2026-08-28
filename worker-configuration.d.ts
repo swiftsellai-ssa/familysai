@@ -6,6 +6,8 @@ interface __BaseEnv_Env {
 	ASSETS: Fetcher;
 	SIGNUPS_OPEN: "dogfood";
 	MAILER: "resend";
+	TURNSTILE_SITE_KEY: "1x00000000000000000000AA";
+	TURNSTILE_SECRET_KEY?: string;
 }
 declare namespace Cloudflare {
 	interface GlobalProps {
@@ -18,7 +20,7 @@ type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
 declare namespace NodeJS {
-	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SIGNUPS_OPEN" | "MAILER">> {}
+	interface ProcessEnv extends StringifyValues<Pick<Cloudflare.Env, "SIGNUPS_OPEN" | "MAILER" | "TURNSTILE_SITE_KEY" | "TURNSTILE_SECRET_KEY">> {}
 }
 
 // Begin runtime types
