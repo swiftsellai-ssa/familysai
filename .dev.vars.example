@@ -1,4 +1,24 @@
+# Local wrangler / vite only. Copy to .dev.vars (gitignored).
+# Do not use these placeholder values in production.
+#
+# Production:
+#   npx wrangler secret put SESSION_SECRET
+#   npx wrangler secret put MAGIC_LINK_SIGNING_KEY
+#   npx wrangler secret put RESEND_API_KEY
+#   npx wrangler secret put TURNSTILE_SECRET_KEY
+# Ops (do not commit): set vars.DOFOOD_EMAIL and RESEND_FROM at deploy.
+# If DOFOOD_EMAIL is unset, dogfood mode issues no tokens (still { ok: true }).
+
 # Dummy always-pass Turnstile secret for local wrangler/vite only.
 # Cloudflare test secret — NOT a production key.
-# Production: npx wrangler secret put TURNSTILE_SECRET_KEY
 TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
+
+# Local-only placeholders, 32+ bytes, clearly not production secrets.
+SESSION_SECRET=LOCAL_ONLY_NOT_FOR_PROD_session_secret_0001
+MAGIC_LINK_SIGNING_KEY=LOCAL_ONLY_NOT_FOR_PROD_magic_link_key_0001
+
+# MAILER=log is allowed locally because wrangler.jsonc SIGNUPS_OPEN=dogfood.
+# Production waitlist must keep MAILER=resend (wrangler vars default).
+MAILER=log
+
+# Do not set a fake RESEND_API_KEY here. Do not invent DOFOOD_EMAIL.
