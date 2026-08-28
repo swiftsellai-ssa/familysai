@@ -1,0 +1,12 @@
+id: butter-chicken
+title: Butter chicken
+serves: 4
+leftovers: true
+time_min: 40
+tags:
+  - chicken
+notes: null
+ingredients:
+  - item: chicken thigh
+    qty: 800
+    unit: g
