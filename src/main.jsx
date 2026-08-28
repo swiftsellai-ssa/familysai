@@ -6,6 +6,7 @@ import './index.css'
 import App from './App.jsx'
 import RulesPage from './app/rules/RulesPage.jsx'
 import StampsNewPage from './app/stamps/new/StampsNewPage.jsx'
+import InboxPage from './app/stamps/InboxPage.jsx'
 import CanonPage from './app/meals/canon/CanonPage.jsx'
 import WeeksPage from './app/meals/weeks/WeeksPage.jsx'
 import WeekDetailPage from './app/meals/weeks/WeekDetailPage.jsx'
@@ -25,6 +26,7 @@ createRoot(document.getElementById('root')).render(
         <Route path="/auth/callback" element={<CallbackPage />} />
         <Route path="/auth/request" element={<RequestPage />} />
         <Route path="/app/rules" element={<RulesPage />} />
+        <Route path="/app/stamps" element={<InboxPage />} />
         <Route path="/app/stamps/new" element={<StampsNewPage />} />
         <Route path="/stamps/new" element={<StampsNewPage />} />
         <Route path="/app/meals/canon" element={<CanonPage />} />

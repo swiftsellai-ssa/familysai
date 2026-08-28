@@ -39,6 +39,10 @@ export default function StampsNewPage() {
   const [submitState, setSubmitState] = useState('idle');
   const [error, setError] = useState('');
   const [created, setCreated] = useState(null);
+  const [kiosk, setKiosk] = useState(false);
+  const [kioskLabel, setKioskLabel] = useState("");
+  const [pin, setPin] = useState("");
+  const [exitPin, setExitPin] = useState("");
 
   useEffect(() => {
     document.documentElement.classList.add('fk-stamp');
@@ -50,6 +54,17 @@ export default function StampsNewPage() {
     let cancelled = false;
     (async () => {
       try {
+        const meRes = await fetch('/api/v1/me', { credentials: 'include' });
+        if (cancelled) return;
+        if (meRes.status === 401) { setStatus('unauthenticated'); return; }
+        if (!meRes.ok) { setStatus('error'); return; }
+        const me = await meRes.json();
+        if (me.kiosk === true) {
+          setKiosk(true);
+          setKioskLabel(me.member_label || me.kiosk_member_id || '');
+          setStatus('ready');
+          return;
+        }
         const res = await fetch('/api/v1/household/members', {
           credentials: 'include',
         });
@@ -90,6 +105,60 @@ export default function StampsNewPage() {
     });
   };
 
+  const enterKiosk = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSubmitState('saving');
+    try {
+      const res = await fetch('/api/v1/stamps/kiosk/enter', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ member_id: memberId, pin }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.status === 401) { setStatus('unauthenticated'); setSubmitState('idle'); return; }
+      if (res.status === 403 && data.error === 'kiosk_pin_required') {
+        setSubmitState('idle');
+        setError('Set the school-night PIN on the phone inbox first.');
+        return;
+      }
+      if (!res.ok) { setSubmitState('idle'); setError('Could not enter kiosk. Check child and PIN.'); return; }
+      setKiosk(true);
+      const meRes = await fetch('/api/v1/me', { credentials: 'include' });
+      if (meRes.ok) {
+        const me = await meRes.json();
+        setKioskLabel(me.member_label || me.kiosk_member_id || '');
+      }
+      setPin('');
+      setSubmitState('idle');
+      setStatus('ready');
+    } catch {
+      setSubmitState('idle');
+      setError('Could not enter kiosk.');
+    }
+  };
+
+  const exitKiosk = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await fetch('/api/v1/stamps/kiosk/exit', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pin: exitPin }),
+      });
+      if (!res.ok) { setError('Exit denied. PIN is required.'); return; }
+      setKiosk(false);
+      setExitPin('');
+      setStatus('ready');
+      window.location.reload();
+    } catch {
+      setError('Could not exit kiosk.');
+    }
+  };
+
   const onSubmit = async (e) => {
     e.preventDefault();
     setSubmitState('saving');
@@ -99,10 +168,12 @@ export default function StampsNewPage() {
         title: title.trim(),
         used_ai_for: used,
         checked_against: checkedAgainst.trim(),
-        member_id: memberId,
       };
-      if (due.trim()) body.due = due.trim();
-      if (notes.trim()) body.notes = notes.trim();
+      if (!kiosk) {
+        body.member_id = memberId;
+        if (due.trim()) body.due = due.trim();
+        if (notes.trim()) body.notes = notes.trim();
+      }
 
       const res = await fetch('/api/v1/stamps', {
         method: 'POST',
@@ -138,7 +209,7 @@ export default function StampsNewPage() {
             This slip is for a parent who is already signed in. There is no
             login on this page. Local dogfood: set cookie{' '}
             <code>fk_session=sess_dogfood_local</code> (raw session id until
-            HMAC wrapping in a later change). See seeds/dogfood/README.md.
+            HMAC see seeds/dogfood/README.md).
           </p>
         </div>
       </div>
@@ -165,6 +236,36 @@ export default function StampsNewPage() {
   }
 
   const children = members.filter((m) => m.role === 'child');
+
+  if (!kiosk && !created) {
+    return (
+      <div className="fk-stamp-desk">
+        <div className="fk-stamp-note">
+          <h1>Open inbox on your phone first.</h1>
+          <p>Parent picks the child and PIN here before the kid sees three fields. Accept stays on the phone.</p>
+          <form className="fk-stamp-form" onSubmit={enterKiosk}>
+            <label className="fk-stamp-field">
+              <span>Child (label)</span>
+              <select value={memberId} onChange={(e) => setMemberId(e.target.value)} required>
+                <option value="" disabled>Select which child</option>
+                {children.map((m) => (
+                  <option key={m.id} value={m.id}>{m.label} ({m.id})</option>
+                ))}
+              </select>
+            </label>
+            <label className="fk-stamp-field">
+              <span>School-night PIN</span>
+              <input type="password" inputMode="numeric" autoComplete="off" maxLength={4} value={pin} onChange={(e) => setPin(e.target.value.replace(/\D/g, '').slice(0, 4))} required />
+            </label>
+            {error ? <p className="fk-stamp-error">{error}</p> : null}
+            <button type="submit" className="fk-stamp-btn" disabled={submitState === 'saving' || !memberId || pin.length !== 4}>
+              {submitState === 'saving' ? 'Entering' : 'Enter kiosk'}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   if (created) {
     return (
@@ -221,28 +322,11 @@ export default function StampsNewPage() {
           <div className="fk-stamp-mark">Bones first</div>
           <h1>Stamp</h1>
           <p className="fk-stamp-lede">
-            Three fields. Software is the clipboard. The adult stays in the
-            room.
+            Three fields. Open inbox on your phone first. The adult stays in the room.
           </p>
 
           <form className="fk-stamp-form" onSubmit={onSubmit}>
-            <label className="fk-stamp-field">
-              <span>Child (label)</span>
-              <select
-                value={memberId}
-                onChange={(e) => setMemberId(e.target.value)}
-                required
-              >
-                <option value="" disabled>
-                  Select which child
-                </option>
-                {children.map((m) => (
-                  <option key={m.id} value={m.id}>
-                    {m.label} ({m.id})
-                  </option>
-                ))}
-              </select>
-            </label>
+            <p className="fk-stamp-hint">Child: {kioskLabel || 'chosen at enter'}. Open inbox on your phone first.</p>
 
             <label className="fk-stamp-field">
               <span>Title</span>
@@ -285,36 +369,22 @@ export default function StampsNewPage() {
               />
             </label>
 
-            <div className="fk-stamp-secondary">
-              <p className="fk-stamp-hint">Optional on this study PC (dogfood). Visually second to the three fields.</p>
-              <label className="fk-stamp-field">
-                <span>Due</span>
-                <input
-                  type="date"
-                  value={due}
-                  onChange={(e) => setDue(e.target.value)}
-                />
-              </label>
-              <label className="fk-stamp-field">
-                <span>Notes</span>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  rows={3}
-                  maxLength={8192}
-                />
-              </label>
-            </div>
-
             {error ? <p className="fk-stamp-error">{error}</p> : null}
 
             <button
               type="submit"
               className="fk-stamp-btn"
-              disabled={submitState === 'saving' || used.length === 0 || !memberId}
+              disabled={submitState === 'saving' || used.length === 0}
             >
               {submitState === 'saving' ? 'Filing' : 'File stamp'}
             </button>
+          </form>
+          <form className="fk-stamp-form" onSubmit={exitKiosk}>
+            <label className="fk-stamp-field">
+              <span>PIN to exit</span>
+              <input type="password" inputMode="numeric" autoComplete="off" maxLength={4} value={exitPin} onChange={(e) => setExitPin(e.target.value.replace(/\D/g, '').slice(0, 4))} />
+            </label>
+            <button type="submit" className="fk-stamp-btn fk-stamp-btn-ghost">Exit kiosk</button>
           </form>
           <p className="fk-stamp-card-foot">Pending until a parent glance on the phone</p>
         </section>

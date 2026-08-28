@@ -9,7 +9,8 @@
  * household_id comes from the D1 row, never from the client body.
  *
  * Do not write last_seen_at on every request. 14-day expiry from login.
- * Cookie Path=/. Kiosk deny-by-default allowlist is PR-8.
+ * Cookie Path=/. Kiosk deny-by-default allowlist is worker/middleware.ts.
+ * sessions.kiosk in D1 is source of truth; fk_kiosk cookie is a hint only.
  */
 
 import type { Context, Next } from "hono";
@@ -18,6 +19,7 @@ import { first } from "./db";
 import { secretLongEnough, verifySessionCookie } from "./hmac";
 
 export const SESSION_COOKIE = "fk_session";
+export const KIOSK_COOKIE = "fk_kiosk";
 
 export type SessionRow = {
 	id: string;
@@ -25,6 +27,8 @@ export type SessionRow = {
 	parent_id: string;
 	expires_at: string;
 	kiosk: number;
+	kiosk_member_id: string | null;
+	kiosk_stamp_id: string | null;
 };
 
 export type SessionEnv = {
@@ -44,7 +48,8 @@ export async function loadSession(
 
 	const row = await first<SessionRow>(
 		c.env.DB,
-		`SELECT id, household_id, parent_id, expires_at, kiosk
+		`SELECT id, household_id, parent_id, expires_at, kiosk,
+		        kiosk_member_id, kiosk_stamp_id
 		 FROM sessions
 		 WHERE id = ?1`,
 		[id],

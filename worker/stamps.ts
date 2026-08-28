@@ -2,22 +2,31 @@
  * Stamp records (homework gate).
  *
  * POST /api/v1/stamps
+ * GET  /api/v1/stamps              inbox (non-kiosk; default status=pending)
  * GET  /api/v1/stamps/:id
- * PUT  /api/v1/stamps/:id   { paragraph?, notes?, due? }
+ * PUT  /api/v1/stamps/:id          { paragraph?, notes?, due? }  kiosk denied via middleware
+ * POST /api/v1/stamps/:id/accept   kiosk denied via middleware
+ * POST /api/v1/stamps/:id/request-changes
+ * POST /api/v1/stamps/kiosk/enter  { member_id, pin }
+ * POST /api/v1/stamps/kiosk/exit   { pin }
  *
  * Session household only. Never read household_id from the client body.
- * No AUTH=off. No Accept / request-changes / textbook / inbox list (PR-8).
- * Kiosk enter/exit/PIN is PR-8. Until then, parent selects member_id on
- * a non-kiosk POST (child is a label, never a login).
- *
- * PR-8 will deny kiosk sessions on PUT (and inbox/Accept). Comment only
- * in this PR — do not implement kiosk deny yet.
+ * No AUTH=off. Child never has an identity. Parent selects member_id on
+ * kiosk enter, not on kid submit.
  */
 
-import { Hono } from "hono";
-import { householdIdFromSession, scopedFirst, scopedRun } from "./db";
+import { Hono, type Context } from "hono";
+import { deleteCookie, setCookie } from "hono/cookie";
+import { first, householdIdFromSession, scopedAll, scopedFirst, scopedRun } from "./db";
 import { writeStampMd, writeStampYaml } from "./files";
-import { requireParent, type SessionEnv } from "./session";
+import { requireParent, type SessionEnv, KIOSK_COOKIE } from "./session";
+import {
+	PIN_FAILURES,
+	isFourDigitPin,
+	pinMatches,
+	pinRateKey,
+	pinWindowStart,
+} from "./pin";
 
 const PRIVATE = { "Cache-Control": "private, no-store" } as const;
 const TITLE_MAX = 200;
@@ -26,6 +35,8 @@ const NOTES_MAX = 8 * 1024;
 const DUE_MAX = 64;
 const PARAGRAPH_MAX = 32 * 1024;
 const USED_AI = ["outline", "wording", "image", "none"] as const;
+const KIOSK_COOKIE_MAX_AGE = 3600;
+const STATUS_OK = ["pending", "accepted", "changes_requested"] as const;
 
 type UsedAiFor = (typeof USED_AI)[number];
 
@@ -45,10 +56,11 @@ type StampRow = {
 	decided_at: string | null;
 };
 
-type MemberRow = { id: string; role: string };
+type MemberRow = { id: string; role: string; label?: string };
+type PinCols = { kiosk_pin_hash: string | null; kiosk_pin_salt: string | null };
 
-function errorJson(error: string, message: string) {
-	return { error, message };
+function errorJson(error: string, message?: string) {
+	return message ? { error, message } : { error };
 }
 
 function isUsedAiFor(v: unknown): v is UsedAiFor {
@@ -65,7 +77,7 @@ function parseUsedAiForJson(raw: string): UsedAiFor[] {
 	}
 }
 
-function stampJson(row: StampRow) {
+function stampJson(row: StampRow, extra: Record<string, unknown> = {}) {
 	return {
 		id: row.id,
 		member_id: row.member_id,
@@ -77,6 +89,26 @@ function stampJson(row: StampRow) {
 		status: row.status,
 		parent_id: row.parent_id,
 		paragraph: row.paragraph,
+		created_at: row.created_at,
+		decided_at: row.decided_at,
+		...extra,
+	};
+}
+
+function inboxJson(
+	row: StampRow & { member_label?: string | null },
+) {
+	return {
+		id: row.id,
+		member_id: row.member_id,
+		member_label: row.member_label ?? null,
+		title: row.title,
+		due: row.due,
+		used_ai_for: parseUsedAiForJson(row.used_ai_for),
+		checked_against: row.checked_against,
+		notes: row.notes,
+		status: row.status,
+		parent_id: row.parent_id,
 		created_at: row.created_at,
 		decided_at: row.decided_at,
 	};
@@ -154,13 +186,222 @@ function optionalText(
 	return { ok: true, value: trimmed.length === 0 ? null : trimmed };
 }
 
+function nowIso(ms = Date.now()): string {
+	return new Date(ms).toISOString();
+}
+
+async function bumpPinFailures(db: D1Database, householdId: string): Promise<number> {
+	const windowStart = pinWindowStart();
+	const key = pinRateKey(householdId);
+	const row = await first<{ count: number }>(
+		db,
+		`INSERT INTO rate_limits (key, window_start, count)
+		 VALUES (?1, ?2, 1)
+		 ON CONFLICT (key, window_start) DO UPDATE SET count = count + 1
+		 RETURNING count`,
+		[key, windowStart],
+	);
+	return row?.count ?? 1;
+}
+
+async function pinFailureCount(db: D1Database, householdId: string): Promise<number> {
+	const windowStart = pinWindowStart();
+	const key = pinRateKey(householdId);
+	const row = await first<{ count: number }>(
+		db,
+		`SELECT count FROM rate_limits WHERE key = ?1 AND window_start = ?2`,
+		[key, windowStart],
+	);
+	return row?.count ?? 0;
+}
+
+async function loadPinCols(db: D1Database, hid: string): Promise<PinCols | null> {
+	return first<PinCols>(
+		db,
+		`SELECT kiosk_pin_hash, kiosk_pin_salt FROM households WHERE id = ?1`,
+		[hid],
+	);
+}
+
+function setKioskCookie(c: Parameters<typeof setCookie>[0]) {
+	setCookie(c, KIOSK_COOKIE, "1", {
+		path: "/",
+		httpOnly: true,
+		secure: true,
+		sameSite: "Lax",
+		maxAge: KIOSK_COOKIE_MAX_AGE,
+	});
+}
+
+function clearKioskCookie(c: Parameters<typeof deleteCookie>[0]) {
+	deleteCookie(c, KIOSK_COOKIE, {
+		path: "/",
+		secure: true,
+		sameSite: "Lax",
+		httpOnly: true,
+	});
+}
+
 const STAMP_SELECT = `SELECT id, household_id, member_id, title, due, used_ai_for,
 	checked_against, notes, status, parent_id, paragraph, created_at, decided_at
 	FROM stamps WHERE household_id = ?1 AND id = ?2`;
 
+const INBOX_SELECT = `SELECT s.id, s.household_id, s.member_id, s.title, s.due, s.used_ai_for,
+	s.checked_against, s.notes, s.status, s.parent_id, s.paragraph, s.created_at, s.decided_at,
+	m.label AS member_label
+	FROM stamps s
+	JOIN members m ON m.household_id = s.household_id AND m.id = s.member_id
+	WHERE s.household_id = ?1 AND s.status = ?2
+	ORDER BY s.created_at ASC`;
+
 export function createStamps() {
 	const app = new Hono<SessionEnv>();
 	app.use("*", requireParent);
+
+	app.post("/kiosk/enter", async (c) => {
+		const session = c.get("session");
+		if (session.kiosk) {
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+
+		let body: unknown;
+		try {
+			body = await c.req.json();
+		} catch {
+			return c.json(errorJson("validation", "Request body must be JSON."), 400);
+		}
+		if (body === null || typeof body !== "object" || Array.isArray(body)) {
+			return c.json(errorJson("validation", "Request body must be a JSON object."), 400);
+		}
+		const rec = body as Record<string, unknown>;
+		const memberId = typeof rec.member_id === "string" ? rec.member_id.trim() : "";
+		if (!memberId) {
+			return c.json(errorJson("validation", "member_id is required."), 400);
+		}
+
+		const hid = householdIdFromSession(session);
+		const member = await scopedFirst<MemberRow>(
+			c.env.DB,
+			hid,
+			`SELECT id, role FROM members WHERE household_id = ?1 AND id = ?2`,
+			[memberId],
+		);
+		if (!member || member.role !== "child") {
+			return c.json(errorJson("validation", "member_id must be a child in this household."), 400);
+		}
+
+		const cols = await loadPinCols(c.env.DB, hid);
+		if (!cols || cols.kiosk_pin_hash == null || cols.kiosk_pin_hash.length === 0) {
+			return c.json(errorJson("kiosk_pin_required"), 403);
+		}
+
+		if (!isFourDigitPin(rec.pin)) {
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+
+		const failures = await pinFailureCount(c.env.DB, hid);
+		if (failures >= PIN_FAILURES) {
+			return c.json(errorJson("rate_limited", "Too many PIN attempts. Try again later."), 429);
+		}
+
+		const salt = cols.kiosk_pin_salt ?? "";
+		const ok = await pinMatches(salt, rec.pin, cols.kiosk_pin_hash);
+		if (!ok) {
+			const n = await bumpPinFailures(c.env.DB, hid);
+			if (n >= PIN_FAILURES) {
+				return c.json(errorJson("rate_limited", "Too many PIN attempts. Try again later."), 429);
+			}
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+
+		await scopedRun(
+			c.env.DB,
+			hid,
+			`UPDATE sessions
+			 SET kiosk = 1, kiosk_member_id = ?2, kiosk_stamp_id = NULL
+			 WHERE household_id = ?1 AND id = ?3`,
+			[memberId, session.id],
+		);
+		setKioskCookie(c);
+		console.log(JSON.stringify({ evt: "kiosk.enter", household_id: hid }));
+		return c.json({ ok: true, kiosk_member_id: memberId }, 200, PRIVATE);
+	});
+
+	app.post("/kiosk/exit", async (c) => {
+		let body: unknown;
+		try {
+			body = await c.req.json();
+		} catch {
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+		if (body === null || typeof body !== "object" || Array.isArray(body)) {
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+		const pin = (body as Record<string, unknown>).pin;
+		if (typeof pin !== "string" || pin.length === 0) {
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+
+		const session = c.get("session");
+		const hid = householdIdFromSession(session);
+
+		if (!isFourDigitPin(pin)) {
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+
+		const cols = await loadPinCols(c.env.DB, hid);
+		if (!cols || cols.kiosk_pin_hash == null || cols.kiosk_pin_hash.length === 0) {
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+
+		const failures = await pinFailureCount(c.env.DB, hid);
+		if (failures >= PIN_FAILURES) {
+			return c.json(errorJson("rate_limited", "Too many PIN attempts. Try again later."), 429);
+		}
+
+		const salt = cols.kiosk_pin_salt ?? "";
+		const ok = await pinMatches(salt, pin, cols.kiosk_pin_hash);
+		if (!ok) {
+			const n = await bumpPinFailures(c.env.DB, hid);
+			if (n >= PIN_FAILURES) {
+				return c.json(errorJson("rate_limited", "Too many PIN attempts. Try again later."), 429);
+			}
+			return c.json(errorJson("kiosk_denied"), 403);
+		}
+
+		await scopedRun(
+			c.env.DB,
+			hid,
+			`UPDATE sessions
+			 SET kiosk = 0, kiosk_member_id = NULL, kiosk_stamp_id = NULL
+			 WHERE household_id = ?1 AND id = ?2`,
+			[session.id],
+		);
+		clearKioskCookie(c);
+		console.log(JSON.stringify({ evt: "kiosk.exit", household_id: hid }));
+		return c.json({ ok: true }, 200, PRIVATE);
+	});
+
+	app.get("/", async (c) => {
+		const hid = householdIdFromSession(c.get("session"));
+		const raw = c.req.query("status");
+		const status =
+			raw == null || raw === ""
+				? "pending"
+				: STATUS_OK.includes(raw as (typeof STATUS_OK)[number])
+					? raw
+					: null;
+		if (!status) {
+			return c.json(errorJson("validation", "status is invalid."), 400);
+		}
+		const rows = await scopedAll<StampRow & { member_label: string }>(
+			c.env.DB,
+			hid,
+			INBOX_SELECT,
+			[status],
+		);
+		return c.json({ stamps: rows.map(inboxJson) }, 200, PRIVATE);
+	});
 
 	app.post("/", async (c) => {
 		let body: unknown;
@@ -173,7 +414,14 @@ export function createStamps() {
 			return c.json(errorJson("validation", "Request body must be a JSON object."), 400);
 		}
 		const rec = body as Record<string, unknown>;
-		// household_id from the session only — ignore any body field of that name.
+		const session = c.get("session");
+		const kiosk = Boolean(session.kiosk);
+
+		if (kiosk) {
+			if ("member_id" in rec || "due" in rec || "notes" in rec || "paragraph" in rec) {
+				return c.json(errorJson("validation", "Kiosk stamp accepts three fields only."), 400);
+			}
+		}
 
 		const title = typeof rec.title === "string" ? rec.title.trim() : "";
 		if (!title || title.length > TITLE_MAX) {
@@ -200,23 +448,34 @@ export function createStamps() {
 			return c.json(errorJson("validation", "checked_against is required."), 400);
 		}
 
-		// Non-kiosk (all sessions today): parent must pick which child.
-		// After PR-8 kiosk enter, member_id comes from sessions.kiosk_member_id.
-		const memberId = typeof rec.member_id === "string" ? rec.member_id.trim() : "";
-		if (!memberId) {
-			return c.json(errorJson("validation", "member_id is required until kiosk enter."), 400);
+		const hid = householdIdFromSession(session);
+		let memberId: string;
+		let dueVal: string | null = null;
+		let notesVal: string | null = null;
+
+		if (kiosk) {
+			const fromSession = session.kiosk_member_id;
+			if (typeof fromSession !== "string" || fromSession.length === 0) {
+				return c.json(errorJson("validation", "kiosk member is not set."), 400);
+			}
+			memberId = fromSession;
+		} else {
+			memberId = typeof rec.member_id === "string" ? rec.member_id.trim() : "";
+			if (!memberId) {
+				return c.json(errorJson("validation", "member_id is required."), 400);
+			}
+			const dueOpt = optionalText(rec, "due", DUE_MAX);
+			if (!dueOpt.ok) {
+				return c.json(errorJson("validation", "due is invalid."), 400);
+			}
+			const notesOpt = optionalText(rec, "notes", NOTES_MAX);
+			if (!notesOpt.ok) {
+				return c.json(errorJson("validation", "notes is invalid."), 400);
+			}
+			dueVal = dueOpt.value;
+			notesVal = notesOpt.value;
 		}
 
-		const dueOpt = optionalText(rec, "due", DUE_MAX);
-		if (!dueOpt.ok) {
-			return c.json(errorJson("validation", "due is invalid."), 400);
-		}
-		const notesOpt = optionalText(rec, "notes", NOTES_MAX);
-		if (!notesOpt.ok) {
-			return c.json(errorJson("validation", "notes is invalid."), 400);
-		}
-
-		const hid = householdIdFromSession(c.get("session"));
 		const member = await scopedFirst<MemberRow>(
 			c.env.DB,
 			hid,
@@ -239,7 +498,7 @@ export function createStamps() {
 						household_id, id, member_id, title, due, used_ai_for,
 						checked_against, notes, status
 					) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, 'pending')`,
-					[id, memberId, title, dueOpt.value, usedJson, checked, notesOpt.value],
+					[id, memberId, title, dueVal, usedJson, checked, notesVal],
 				);
 				created = await scopedFirst<StampRow>(c.env.DB, hid, STAMP_SELECT, [id]);
 				break;
@@ -252,15 +511,33 @@ export function createStamps() {
 			return c.json(errorJson("validation", "Could not allocate a stamp id."), 400);
 		}
 
+		if (kiosk) {
+			await scopedRun(
+				c.env.DB,
+				hid,
+				`UPDATE sessions SET kiosk_stamp_id = ?2 WHERE household_id = ?1 AND id = ?3`,
+				[created.id, session.id],
+			);
+		}
+
 		console.log(
 			JSON.stringify({
 				evt: "stamp.create",
 				household_id: hid,
 				stamp_id: created.id,
+				kiosk,
 			}),
 		);
 		await writeThrough(c.env, hid, created);
 		return c.json(stampJson(created), 200, PRIVATE);
+	});
+
+	app.post("/:id/accept", async (c) => {
+		return decideStamp(c, "accepted", "stamp.accept");
+	});
+
+	app.post("/:id/request-changes", async (c) => {
+		return decideStamp(c, "changes_requested", "stamp.request_changes");
 	});
 
 	app.get("/:id", async (c) => {
@@ -268,7 +545,13 @@ export function createStamps() {
 		if (!id || id.length > 128) {
 			return c.json(errorJson("not_found", "Stamp not found."), 404);
 		}
-		const hid = householdIdFromSession(c.get("session"));
+		const session = c.get("session");
+		if (session.kiosk) {
+			if (!session.kiosk_stamp_id || session.kiosk_stamp_id !== id) {
+				return c.json(errorJson("kiosk_denied"), 403);
+			}
+		}
+		const hid = householdIdFromSession(session);
 		const row = await scopedFirst<StampRow>(c.env.DB, hid, STAMP_SELECT, [id]);
 		if (!row) {
 			return c.json(errorJson("not_found", "Stamp not found."), 404);
@@ -277,8 +560,6 @@ export function createStamps() {
 	});
 
 	app.put("/:id", async (c) => {
-		// PR-8: kiosk sessions will be denied here (deny-by-default allowlist).
-		// This PR does not implement kiosk enter/exit; all sessions today are non-kiosk.
 		const id = c.req.param("id");
 		if (!id || id.length > 128) {
 			return c.json(errorJson("not_found", "Stamp not found."), 404);
@@ -340,8 +621,46 @@ export function createStamps() {
 		return c.json(stampJson(updated), 200, PRIVATE);
 	});
 
-	// Inbox list, Accept, request-changes, textbook, kiosk enter/exit are PR-8.
 	app.all("*", (c) => c.json(errorJson("not_found", "Not found."), 404));
 
 	return app;
+}
+
+async function decideStamp(
+	c: Context<SessionEnv>,
+	status: "accepted" | "changes_requested",
+	evt: string,
+) {
+	const id = c.req.param("id");
+	if (!id || id.length > 128) {
+		return c.json(errorJson("not_found", "Stamp not found."), 404);
+	}
+	const session = c.get("session");
+	const hid = householdIdFromSession(session);
+	const existing = await scopedFirst<StampRow>(c.env.DB, hid, STAMP_SELECT, [id]);
+	if (!existing) {
+		return c.json(errorJson("not_found", "Stamp not found."), 404);
+	}
+	const decidedAt = nowIso();
+	await scopedRun(
+		c.env.DB,
+		hid,
+		`UPDATE stamps SET status = ?2, decided_at = ?3, parent_id = ?4
+		 WHERE household_id = ?1 AND id = ?5`,
+		[status, decidedAt, session.parent_id, id],
+	);
+	const updated = await scopedFirst<StampRow>(c.env.DB, hid, STAMP_SELECT, [id]);
+	if (!updated) {
+		return c.json(errorJson("not_found", "Stamp not found."), 404);
+	}
+	console.log(
+		JSON.stringify({
+			evt,
+			household_id: hid,
+			stamp_id: updated.id,
+			parent_id: session.parent_id,
+		}),
+	);
+	await writeThrough(c.env, hid, updated);
+	return c.json(stampJson(updated), 200, PRIVATE);
 }
