@@ -7,15 +7,19 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cf-typegen": "wrangler types",
+    "deploy": "vite build && wrangler deploy"
   },
   "dependencies": {
     "@microsoft/clarity": "^1.0.2",
+    "hono": "^4.13.5",
     "lucide-react": "^0.563.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },
   "devDependencies": {
+    "@cloudflare/vite-plugin": "^1.54.1",
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
@@ -27,6 +31,8 @@
     "globals": "^16.5.0",
     "postcss": "^8.5.6",
     "tailwindcss": "^3.4.19",
-    "vite": "^7.2.4"
+    "typescript": "^7.0.2",
+    "vite": "^7.2.4",
+    "wrangler": "^4.127.0"
   }
 }

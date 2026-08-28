@@ -4,7 +4,7 @@ import Clarity from '@microsoft/clarity';
 import './index.css'
 import App from './App.jsx'
 
-if (import.meta.env.PROD) {
+if (import.meta.env.PROD && location.pathname === '/') {
   Clarity.init('vex619g7b3');
 }
 
