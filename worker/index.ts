@@ -5,7 +5,11 @@ import { createRules } from "./rules";
 import { createMembers } from "./members";
 import { createStamps } from "./stamps";
 import { createMealsCanon, createMealsWeeks } from "./meals";
+import { createSettings } from "./settings";
+import { handleMe } from "./me";
 import { requireSameOrigin } from "./origin";
+import { requireParent, requireKioskAllowlist } from "./middleware";
+import type { SessionEnv } from "./session";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -17,18 +21,20 @@ app.route("/api/v1/waitlist", createWaitlist());
 // Magic-link issue + consume + logout. No session required. No AUTH=off.
 app.route("/api/v1/auth", createAuth());
 
-// Parent APIs. Session cookie is id.hmac (SESSION_SECRET). No AUTH=off.
-app.route("/api/v1/rules", createRules());
+// Parent APIs. HMAC session. Deny-by-default kiosk allowlist when sessions.kiosk=1.
+const authed = new Hono<SessionEnv>();
+authed.use("*", requireParent);
+authed.use("*", requireKioskAllowlist);
 
-// Parent picks a child label on the study-PC stamp form until PR-8 kiosk enter.
-app.route("/api/v1/household/members", createMembers());
+authed.get("/me", handleMe);
+authed.route("/household/members", createMembers());
+authed.route("/rules", createRules());
+authed.route("/stamps", createStamps());
+authed.route("/meals/canon", createMealsCanon());
+authed.route("/meals/weeks", createMealsWeeks());
+authed.route("/settings", createSettings());
 
-// Stamp create / get / put. No Accept, no inbox list, no kiosk (PR-8).
-app.route("/api/v1/stamps", createStamps());
-
-// Sunday list: meal canon + labelled weeks + named text export. No LLM.
-app.route("/api/v1/meals/canon", createMealsCanon());
-app.route("/api/v1/meals/weeks", createMealsWeeks());
+app.route("/api/v1", authed);
 
 app.all("/api/*", (c) => c.json({ error: "not_found" }, 404));
 
