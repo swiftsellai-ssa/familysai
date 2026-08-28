@@ -10,7 +10,8 @@
     "preview": "vite preview",
     "cf-typegen": "wrangler types",
     "deploy": "vite build && wrangler deploy",
-    "test": "node --experimental-strip-types --test test/aggregate.test.ts",
+    "test": "node --experimental-strip-types --experimental-sqlite --import ./test/register-loader.mjs --test test/*.test.ts",
+    "session:cookie": "node scripts/session-cookie.mjs",
     "typecheck:worker": "tsc -p tsconfig.worker.json"
   },
   "dependencies": {

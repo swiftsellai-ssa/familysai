@@ -35,13 +35,13 @@ address and is not written into git.
 
 ## Mint / use a session (Playwright, wrangler dev)
 
-This PR: the `sessions` row is enough. Auth (magic link, cookie HMAC) is PR-7.
+PR-7 requires id.hmac. See scripts/session-cookie.mjs.
 Playwright should use this seeded row, **not** an HTTP bypass.
 
 **Forbidden:** `AUTH=off` header, `AUTH=off` query param, any Worker flag that
 skips auth. Not on local, not on preview, not on production.
 
-When PR-7 lands, the session cookie is:
+The session cookie is:
 
 ```
 fk_session=<session_id>.<hmac>
@@ -50,14 +50,14 @@ fk_session=<session_id>.<hmac>
 `HttpOnly; Secure; SameSite=Lax; Path=/`. HMAC is `HMAC-SHA256(session_id,
 SESSION_SECRET)`. Reject a bad HMAC before the D1 lookup.
 
-Until that HMAC exists, a test can:
+To mint a local session cookie:
 
 1. Apply this seed (inserts `sess_dogfood_local`).
 2. Read the row: `SELECT id, household_id, parent_id, expires_at, kiosk FROM sessions WHERE id = 'sess_dogfood_local';`
-3. After PR-7: set `fk_session` to `sess_dogfood_local.<hmac>` using the local
+3. Run the session-cookie script and set that value. Uses the local
    `SESSION_SECRET` from `.dev.vars`. Do not invent a production secret here.
 
-Until PR-7 HMAC wrapping, wrangler dev uses the raw id: set cookie `fk_session=sess_dogfood_local` (`document.cookie = 'fk_session=sess_dogfood_local; Path=/'`) then open `/app/meals/weeks`, `/app/rules`, or `/stamps/new` (alias `/app/stamps/new`). No `AUTH=off`.
+Do not use the raw id. Paste the script output as the cookie (Path=/) then open /app/meals/weeks, /app/rules, or /stamps/new.
 
 To mint an extra local session later (still `--local` only):
 

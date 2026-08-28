@@ -24,7 +24,13 @@
 		// NOT a production widget key. Production: create a Turnstile widget, set this var to the
 		// real sitekey, and `npx wrangler secret put TURNSTILE_SECRET_KEY`.
 		"TURNSTILE_SITE_KEY": "1x00000000000000000000AA"
-		// DOFOOD_EMAIL is a PR-7 ops fill-in; do not invent the mailbox here.
+		// DOFOOD_EMAIL is an ops fill-in at deploy; do not invent the mailbox here.
+		// If unset, dogfood mode issues no tokens (still { ok: true }).
+		// Secrets (do not commit): npx wrangler secret put SESSION_SECRET
+		//   MAGIC_LINK_SIGNING_KEY, RESEND_API_KEY. RESEND_FROM is ops paste;
+		//   do not invent a from-address. MAILER=log is local .dev.vars only
+		//   (allowed because SIGNUPS_OPEN=dogfood). Production waitlist must
+		//   not use log mode. Hostname is the incoming request Host, not invented.
 	},
 	"d1_databases": [
 		{

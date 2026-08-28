@@ -1,17 +1,23 @@
 import { Hono } from "hono";
+import { createAuth } from "./auth";
 import { createWaitlist } from "./waitlist";
 import { createRules } from "./rules";
 import { createMembers } from "./members";
 import { createStamps } from "./stamps";
 import { createMealsCanon, createMealsWeeks } from "./meals";
+import { requireSameOrigin } from "./origin";
 
 const app = new Hono<{ Bindings: Env }>();
+
+app.use("/api/*", requireSameOrigin);
 
 app.get("/api/v1/health", (c) => c.json({ ok: true }));
 app.route("/api/v1/waitlist", createWaitlist());
 
-// Parent rules APIs. Mount before the /api/* 404. Session cookie is the
-// raw sessions.id until HMAC wrapping in PR-7. No AUTH=off.
+// Magic-link issue + consume + logout. No session required. No AUTH=off.
+app.route("/api/v1/auth", createAuth());
+
+// Parent APIs. Session cookie is id.hmac (SESSION_SECRET). No AUTH=off.
 app.route("/api/v1/rules", createRules());
 
 // Parent picks a child label on the study-PC stamp form until PR-8 kiosk enter.

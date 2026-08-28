@@ -1,20 +1,21 @@
 /**
- * Parent session from cookie `fk_session`.
+ * Parent session from cookie `fk_session=<session_id>.<hmac>`.
  *
- * Until PR-7, the cookie value is the raw D1 `sessions.id`
- * (local seed: `sess_dogfood_local`). HMAC wrapping (`id.hmac` +
- * SESSION_SECRET) is PR-7 — this helper does not verify a signature.
+ * HMAC is HMAC-SHA256(session_id, SESSION_SECRET). Reject a bad HMAC
+ * before the D1 lookup. Raw `sess_dogfood_local` without HMAC is 401.
  *
- * There is no AUTH=off header, query, or env bypass. Missing or expired
- * sessions are unauthenticated. household_id comes from the D1 row, never
- * from the client body.
+ * There is no AUTH=off header, query, or env bypass. Missing secret,
+ * missing cookie, invalid HMAC, or expired sessions are unauthenticated.
+ * household_id comes from the D1 row, never from the client body.
  *
- * Kiosk deny-by-default allowlist is PR-8. This module only loads the row.
+ * Do not write last_seen_at on every request. 14-day expiry from login.
+ * Cookie Path=/. Kiosk deny-by-default allowlist is PR-8.
  */
 
 import type { Context, Next } from "hono";
 import { getCookie } from "hono/cookie";
 import { first } from "./db";
+import { secretLongEnough, verifySessionCookie } from "./hmac";
 
 export const SESSION_COOKIE = "fk_session";
 
@@ -31,18 +32,14 @@ export type SessionEnv = {
 	Variables: { session: SessionRow };
 };
 
-function cookieSessionId(c: Context<SessionEnv>): string | null {
-	const raw = getCookie(c, SESSION_COOKIE);
-	if (typeof raw !== "string") return null;
-	const id = raw.trim();
-	if (id.length === 0 || id.length > 128) return null;
-	return id;
-}
-
 export async function loadSession(
 	c: Context<SessionEnv>,
 ): Promise<SessionRow | null> {
-	const id = cookieSessionId(c);
+	const secret = c.env.SESSION_SECRET;
+	if (!secretLongEnough(secret)) return null;
+
+	const raw = getCookie(c, SESSION_COOKIE);
+	const id = await verifySessionCookie(raw, secret);
 	if (!id) return null;
 
 	const row = await first<SessionRow>(

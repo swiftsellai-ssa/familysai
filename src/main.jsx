@@ -9,8 +9,10 @@ import StampsNewPage from './app/stamps/new/StampsNewPage.jsx'
 import CanonPage from './app/meals/canon/CanonPage.jsx'
 import WeeksPage from './app/meals/weeks/WeeksPage.jsx'
 import WeekDetailPage from './app/meals/weeks/WeekDetailPage.jsx'
+import CallbackPage from './app/auth/CallbackPage.jsx'
+import RequestPage from './app/auth/RequestPage.jsx'
 
-// Clarity is landing-only. Do not init on /app/* or /stamps/new.
+// Clarity is landing-only. Do not init on /app/* , /auth/* , or /stamps/new.
 if (import.meta.env.PROD && location.pathname === '/') {
   Clarity.init('vex619g7b3');
 }
@@ -20,6 +22,8 @@ createRoot(document.getElementById('root')).render(
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<App />} />
+        <Route path="/auth/callback" element={<CallbackPage />} />
+        <Route path="/auth/request" element={<RequestPage />} />
         <Route path="/app/rules" element={<RulesPage />} />
         <Route path="/app/stamps/new" element={<StampsNewPage />} />
         <Route path="/stamps/new" element={<StampsNewPage />} />
