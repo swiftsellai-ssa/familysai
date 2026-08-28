@@ -1,0 +1,4 @@
+# Dummy always-pass Turnstile secret for local wrangler/vite only.
+# Cloudflare test secret — NOT a production key.
+# Production: npx wrangler secret put TURNSTILE_SECRET_KEY
+TURNSTILE_SECRET_KEY=1x0000000000000000000000000000000AA
