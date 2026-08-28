@@ -1,0 +1,335 @@
+/* /stamps/new + /app/stamps/new — homework gate slip. Same paper/ink/stamp
+   family as /app/rules (Fraunces + Source Serif 4). Not a chat UI. */
+
+html.fk-stamp,
+html.fk-stamp body {
+  min-height: 100%;
+  background: #cfc0a6;
+  color: #241c14;
+  font-family: "Source Serif 4", "Iowan Old Style", Palatino, "Palatino Linotype", serif;
+}
+
+.fk-stamp-desk {
+  --ink: #241c14;
+  --paper: #f4ead3;
+  --paper-shadow: #d9c7a3;
+  --plaster: #cfc0a6;
+  --stamp: #7a2e24;
+  --brass: #8a6a3b;
+  min-height: 100vh;
+  padding: 2.4rem 1.2rem 3.5rem;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #ddd0b8 0%, transparent 55%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(70, 50, 30, 0.03) 0 1px,
+      transparent 1px 7px
+    ),
+    var(--plaster);
+  color: var(--ink);
+}
+
+.fk-stamp-mast {
+  max-width: 40rem;
+  margin: 0 auto 1.4rem;
+}
+
+.fk-stamp-kicker {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+  color: #5a4630;
+}
+
+.fk-stamp-stage {
+  position: relative;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.fk-stamp-clip {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  z-index: 3;
+  width: 52px;
+  height: 36px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.fk-stamp-clip-top {
+  width: 52px;
+  height: 22px;
+  border: 2.5px solid var(--ink);
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(#d8d3c8, #b7b0a2);
+}
+
+.fk-stamp-clip-wire {
+  width: 18px;
+  height: 26px;
+  margin: -4px auto 0;
+  border: 2.5px solid var(--ink);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: #efe6d2;
+}
+
+.fk-stamp-card {
+  position: relative;
+  background:
+    radial-gradient(ellipse 90px 50px at 18% 88%, rgba(90, 70, 40, 0.07), transparent 70%),
+    var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 2.6rem 2.2rem 2rem 2.4rem;
+  box-shadow:
+    0 1px 0 var(--paper-shadow),
+    8px 14px 28px rgba(50, 32, 12, 0.22);
+  transform: rotate(-0.25deg);
+}
+
+.fk-stamp-card::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(36, 28, 20, 0.35);
+  pointer-events: none;
+}
+
+.fk-stamp-mark {
+  position: absolute;
+  top: 1.35rem;
+  right: 1.4rem;
+  width: 5.6rem;
+  height: 5.6rem;
+  border: 2px solid var(--stamp);
+  border-radius: 50%;
+  color: var(--stamp);
+  transform: rotate(-16deg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  line-height: 1.2;
+  padding: 0.55rem;
+  opacity: 0.88;
+  z-index: 2;
+  mix-blend-mode: multiply;
+}
+
+.fk-stamp-card h1 {
+  font-family: "Fraunces", Palatino, serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-size: clamp(2.1rem, 5vw, 3rem);
+  letter-spacing: -0.03em;
+  line-height: 1.02;
+  margin: 0.2rem 0 0.7rem;
+  padding-right: 5.5rem;
+}
+
+.fk-stamp-lede {
+  font-size: 1.05rem;
+  line-height: 1.45;
+  font-style: italic;
+  margin: 0 0 1.3rem;
+  max-width: 28rem;
+}
+
+.fk-stamp-form {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.fk-stamp-field {
+  display: block;
+}
+
+.fk-stamp-field > span,
+.fk-stamp-field legend {
+  display: block;
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin-bottom: 0.4rem;
+  color: #5a4630;
+}
+
+.fk-stamp-field input[type="text"],
+.fk-stamp-field input[type="date"],
+.fk-stamp-field select,
+.fk-stamp-field textarea {
+  width: 100%;
+  font-family: "Source Serif 4", Palatino, serif;
+  font-size: 1.02rem;
+  line-height: 1.45;
+  color: var(--ink);
+  background: #efe4c9;
+  border: 1.5px solid var(--ink);
+  padding: 0.55rem 0.75rem;
+  box-shadow: 2px 3px 0 rgba(36, 28, 20, 0.1);
+}
+
+.fk-stamp-field textarea {
+  resize: vertical;
+  min-height: 4.5rem;
+}
+
+.fk-stamp-field input:focus,
+.fk-stamp-field select:focus,
+.fk-stamp-field textarea:focus {
+  outline: 2px solid var(--ink);
+  outline-offset: 2px;
+}
+
+.fk-stamp-hint {
+  margin: 0 0 0.45rem;
+  font-size: 0.88rem;
+  font-style: italic;
+  color: #5a4630;
+}
+
+.fk-stamp-checks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1.1rem;
+}
+
+.fk-stamp-check {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.02rem;
+  cursor: pointer;
+}
+
+.fk-stamp-check input {
+  accent-color: var(--stamp);
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.fk-stamp-secondary {
+  margin-top: 0.4rem;
+  padding-top: 0.9rem;
+  border-top: 1px dashed rgba(36, 28, 20, 0.35);
+  opacity: 0.82;
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.fk-stamp-btn {
+  align-self: flex-start;
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 0.5rem 1.05rem 0.45rem;
+  cursor: pointer;
+  box-shadow: 1px 2px 0 #5a4630;
+}
+
+.fk-stamp-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 0 1px 0 #5a4630;
+}
+
+.fk-stamp-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: 1px 2px 0 #5a4630;
+}
+
+.fk-stamp-error {
+  color: var(--stamp);
+  font-style: italic;
+  margin: 0;
+}
+
+.fk-stamp-card-foot {
+  margin: 1.4rem 0 0;
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5a4630;
+}
+
+.fk-stamp-dl {
+  margin: 0;
+  display: grid;
+  gap: 0.65rem;
+}
+
+.fk-stamp-dl > div {
+  display: grid;
+  grid-template-columns: 6.5rem 1fr;
+  gap: 0.6rem;
+  padding: 0.55rem 0;
+  border-top: 1px solid rgba(36, 28, 20, 0.35);
+}
+
+.fk-stamp-dl dt {
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #5a4630;
+}
+
+.fk-stamp-dl dd {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.fk-stamp-dl code {
+  font-size: 0.95em;
+}
+
+.fk-stamp-note {
+  max-width: 36rem;
+  margin: 4rem auto;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 2rem 1.8rem;
+  transform: rotate(-0.6deg);
+  box-shadow: 6px 10px 20px rgba(50, 32, 12, 0.18);
+}
+
+.fk-stamp-note h1 {
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 1.8rem;
+  margin: 0 0 0.7rem;
+  letter-spacing: -0.02em;
+}
+
+.fk-stamp-note p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+fieldset.fk-stamp-field {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}
