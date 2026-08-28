@@ -1,0 +1,367 @@
+/* /app/meals/* — Sunday clipboard. Same paper/ink family as rules/stamps.
+   Fraunces + Source Serif 4. Not a meal-kit marketing page. */
+
+html.fk-meals,
+html.fk-meals body {
+  min-height: 100%;
+  background: #cfc0a6;
+  color: #241c14;
+  font-family: "Source Serif 4", "Iowan Old Style", Palatino, "Palatino Linotype", serif;
+}
+
+.fk-meals-desk {
+  --ink: #241c14;
+  --paper: #f4ead3;
+  --paper-shadow: #d9c7a3;
+  --plaster: #cfc0a6;
+  --stamp: #7a2e24;
+  --brass: #8a6a3b;
+  min-height: 100vh;
+  padding: 2.4rem 1.2rem 3.5rem;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, #ddd0b8 0%, transparent 55%),
+    repeating-linear-gradient(
+      0deg,
+      rgba(70, 50, 30, 0.03) 0 1px,
+      transparent 1px 7px
+    ),
+    var(--plaster);
+  color: var(--ink);
+}
+
+.fk-meals-mast {
+  max-width: 44rem;
+  margin: 0 auto 1.4rem;
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.fk-meals-kicker {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  margin: 0;
+  color: #5a4630;
+}
+
+.fk-meals-nav {
+  display: flex;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+}
+
+.fk-meals-nav a {
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+}
+
+.fk-meals-nav a:hover {
+  color: var(--stamp);
+  border-bottom-color: var(--stamp);
+}
+
+.fk-meals-stage {
+  position: relative;
+  max-width: 44rem;
+  margin: 0 auto;
+}
+
+.fk-meals-clip {
+  position: absolute;
+  top: -18px;
+  left: 50%;
+  z-index: 3;
+  width: 52px;
+  height: 36px;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.fk-meals-clip-top {
+  width: 52px;
+  height: 22px;
+  border: 2.5px solid var(--ink);
+  border-radius: 8px 8px 4px 4px;
+  background: linear-gradient(#d8d3c8, #b7b0a2);
+}
+
+.fk-meals-clip-wire {
+  width: 18px;
+  height: 26px;
+  margin: -4px auto 0;
+  border: 2.5px solid var(--ink);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: #efe6d2;
+}
+
+.fk-meals-card {
+  position: relative;
+  background:
+    radial-gradient(ellipse 90px 50px at 18% 88%, rgba(90, 70, 40, 0.07), transparent 70%),
+    var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 2.6rem 2.2rem 2rem 2.4rem;
+  box-shadow:
+    0 1px 0 var(--paper-shadow),
+    8px 14px 28px rgba(50, 32, 12, 0.22);
+  transform: rotate(-0.25deg);
+}
+
+.fk-meals-card::before {
+  content: "";
+  position: absolute;
+  inset: 9px;
+  border: 1px solid rgba(36, 28, 20, 0.35);
+  pointer-events: none;
+}
+
+.fk-meals-card h1 {
+  font-family: "Fraunces", Palatino, serif;
+  font-optical-sizing: auto;
+  font-weight: 700;
+  font-size: clamp(1.9rem, 4.6vw, 2.7rem);
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  margin: 0.2rem 0 0.55rem;
+  padding-right: 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.fk-meals-lede {
+  font-size: 1.05rem;
+  line-height: 1.45;
+  font-style: italic;
+  margin: 0 0 1.3rem;
+  max-width: 32rem;
+  position: relative;
+  z-index: 1;
+}
+
+.fk-meals-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.fk-meals-week {
+  display: block;
+  text-decoration: none;
+  color: inherit;
+  background: #efe4c9;
+  border: 1.5px solid var(--ink);
+  padding: 0.85rem 1rem 0.8rem;
+  box-shadow: 2px 3px 0 rgba(36, 28, 20, 0.1);
+}
+
+.fk-meals-week:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 1px 2px 0 rgba(36, 28, 20, 0.1);
+}
+
+.fk-meals-week-name {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  font-size: 1.2rem;
+  letter-spacing: -0.02em;
+  display: block;
+}
+
+.fk-meals-week-meta {
+  display: block;
+  margin-top: 0.2rem;
+  font-size: 0.92rem;
+  color: #5a4630;
+}
+
+.fk-meals-dinner {
+  padding: 0.55rem 0;
+  border-top: 1px solid rgba(36, 28, 20, 0.28);
+  position: relative;
+  z-index: 1;
+}
+
+.fk-meals-dinner:first-child {
+  border-top: 0;
+}
+
+.fk-meals-dinner strong {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+}
+
+.fk-meals-ings {
+  margin: 0.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.98rem;
+  color: #3a2e22;
+}
+
+.fk-meals-ings li::before {
+  content: "– ";
+}
+
+.fk-meals-agg {
+  position: relative;
+  z-index: 1;
+  margin: 1.2rem 0 0;
+  padding-top: 0.9rem;
+  border-top: 1px dashed rgba(36, 28, 20, 0.4);
+}
+
+.fk-meals-agg h2 {
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin: 0 0 0.55rem;
+  color: #5a4630;
+}
+
+.fk-meals-pre {
+  font-family: "Source Serif 4", Palatino, serif;
+  font-size: 1.02rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  background: #efe4c9;
+  border: 1.5px solid var(--ink);
+  padding: 0.85rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.fk-meals-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  align-items: center;
+  position: relative;
+  z-index: 1;
+}
+
+.fk-meals-btn {
+  font-family: "Fraunces", Palatino, serif;
+  font-weight: 600;
+  font-size: 0.82rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--ink);
+  color: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 0.5rem 1.05rem 0.45rem;
+  cursor: pointer;
+  box-shadow: 1px 2px 0 #5a4630;
+}
+
+.fk-meals-btn:hover {
+  transform: translate(1px, 1px);
+  box-shadow: 0 1px 0 #5a4630;
+}
+
+.fk-meals-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.fk-meals-stores {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem 1rem;
+  margin: 0 0 1rem;
+  position: relative;
+  z-index: 1;
+}
+
+.fk-meals-stores legend {
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5a4630;
+  padding: 0;
+  margin-bottom: 0.4rem;
+}
+
+.fk-meals-stores label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.fk-meals-stores input {
+  accent-color: var(--stamp);
+}
+
+.fk-meals-note {
+  max-width: 36rem;
+  margin: 4rem auto;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 2rem 1.8rem;
+  transform: rotate(-0.6deg);
+  box-shadow: 6px 10px 20px rgba(50, 32, 12, 0.18);
+}
+
+.fk-meals-note h1 {
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 1.8rem;
+  margin: 0 0 0.7rem;
+  letter-spacing: -0.02em;
+}
+
+.fk-meals-note p {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.45;
+}
+
+.fk-meals-status {
+  font-style: italic;
+  font-size: 0.95rem;
+  color: #5a4630;
+  margin: 0;
+}
+
+.fk-meals-empty {
+  font-style: italic;
+  margin: 0;
+  position: relative;
+  z-index: 1;
+}
+
+.fk-meals-card-foot {
+  margin: 1.4rem 0 0;
+  font-family: "Fraunces", Palatino, serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: #5a4630;
+  position: relative;
+  z-index: 1;
+}
+
+fieldset.fk-meals-stores {
+  border: 0;
+  margin: 0;
+  padding: 0;
+}

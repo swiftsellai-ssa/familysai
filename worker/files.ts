@@ -68,6 +68,17 @@ export async function putObject(
 	}
 }
 
+/** Best-effort delete. Unbound FILES → no-op. Failure → log, no throw. */
+export async function deleteObject(env: FilesEnv, key: string): Promise<void> {
+	const files = filesBucket(env);
+	if (!files || typeof files.delete !== "function") return;
+	try {
+		await files.delete(key);
+	} catch {
+		logSyncFailed(key);
+	}
+}
+
 /** SQL leftovers 0/1 ↔ YAML boolean. */
 export function leftoversToYaml(sql: number | null | undefined): boolean {
 	return sql === 1;
@@ -150,6 +161,34 @@ export function deserializeMealCanon(doc: MealCanonYaml): {
 		tags: JSON.stringify(doc.tags ?? []),
 		notes: doc.notes ?? null,
 		ingredients: doc.ingredients ?? [],
+	};
+}
+
+
+export type WeekYaml = {
+	id: string;
+	title: string;
+	flex: string;
+	list_name: string;
+	origin: string;
+	dinners: string[];
+};
+
+export function serializeWeek(row: {
+	id: string;
+	title: string;
+	flex: string;
+	list_name: string;
+	origin: string;
+	dinners: string[];
+}): WeekYaml {
+	return {
+		id: row.id,
+		title: row.title,
+		flex: row.flex,
+		list_name: row.list_name,
+		origin: row.origin,
+		dinners: row.dinners,
 	};
 }
 

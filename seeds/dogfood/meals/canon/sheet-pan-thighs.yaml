@@ -1,0 +1,12 @@
+id: sheet-pan-thighs
+title: Sheet-pan thighs
+serves: 4
+leftovers: false
+time_min: 35
+tags:
+  - chicken
+notes: null
+ingredients:
+  - item: chicken thigh
+    qty: 800
+    unit: g
