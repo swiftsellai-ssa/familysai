@@ -1,0 +1,33 @@
+{
+	"$schema": "./node_modules/wrangler/config-schema.json",
+	"name": "family-kit",
+	"compatibility_date": "2026-08-28",
+	"compatibility_flags": ["nodejs_compat"],
+	"main": "./worker/index.ts",
+	"assets": {
+		"not_found_handling": "single-page-application",
+		"binding": "ASSETS",
+		"run_worker_first": ["/api/*"]
+	},
+	"observability": {
+		"enabled": true,
+		"head_sampling_rate": 1,
+		"logs": {
+			"invocation_logs": true,
+			"head_sampling_rate": 1
+		}
+	},
+	"vars": {
+		"SIGNUPS_OPEN": "dogfood",
+		"MAILER": "resend"
+		// DOFOOD_EMAIL is a PR-7 ops fill-in; do not invent the mailbox here.
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "family-kit",
+			// database_id: run npx wrangler d1 create family-kit --location=oc then paste the UUID. Do not invent one. No SQL migrations in this PR.
+			"migrations_dir": "migrations"
+		}
+	]
+}
