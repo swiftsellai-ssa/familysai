@@ -33,5 +33,14 @@
 			// database_id: run npx wrangler d1 create family-kit --location=oc then paste the UUID. Do not invent one. Local: wrangler d1 migrations apply family-kit --local. Remote apply after database_id exists (PR-1 ops).
 			"migrations_dir": "migrations"
 		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "FILES",
+			"bucket_name": "family-kit"
+			// Private bucket only. Local R2 is emulated by wrangler. No public r2.dev URLs.
+			// Ops (after this PR): npx wrangler r2 bucket create family-kit --location oc
+			// (KD-12 Oceania hint; not AU residency). Do not invent an account ID here.
+		}
 	]
 }

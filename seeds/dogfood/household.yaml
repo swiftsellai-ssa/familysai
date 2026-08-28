@@ -1,0 +1,24 @@
+name: Home
+dinners_per_week: 5
+flex_nights:
+  - leftover
+  - eatout_or_family
+store: woolworths
+quiet:
+  start: "18:30"
+  tz: Australia/Adelaide
+  phones: side_table
+  charge: hallway
+  radios: off
+places:
+  homework: family_study
+  meals: kitchen_table
+home_ai: none
+people:
+  - id: parent_a
+    role: parent
+    label: Parent
+  - id: kid_8
+    role: child
+    label: Kid
+    school_ai: bones_first_only
