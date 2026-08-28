@@ -53,7 +53,8 @@ Software is the clipboard. The adult stays in the room.
 '
 );
 
--- Tiny meal/week fixture so later Sunday-list PRs have a row to query.
+-- Local Sunday-list fixture. Do not apply remotely.
+-- chicken thigh 800 g on two dinners in week-04 → aggregated 1600 g.
 INSERT INTO meals (household_id, id, title, serves, leftovers, time_min, tags)
 VALUES (
   'hid_dogfood_local',
@@ -66,7 +67,23 @@ VALUES (
 );
 
 INSERT INTO ingredients (household_id, meal_id, item, qty, unit, sort_order)
-VALUES ('hid_dogfood_local', 'butter-chicken', 'chicken thigh', 800, 'g', 0);
+VALUES
+  ('hid_dogfood_local', 'butter-chicken', 'chicken thigh', 800, 'g', 0),
+  ('hid_dogfood_local', 'butter-chicken', 'yogurt', 200, 'g', 1);
+
+INSERT INTO meals (household_id, id, title, serves, leftovers, time_min, tags)
+VALUES (
+  'hid_dogfood_local',
+  'sheet-pan-thighs',
+  'Sheet-pan thighs',
+  4,
+  0,
+  35,
+  '["chicken"]'
+);
+
+INSERT INTO ingredients (household_id, meal_id, item, qty, unit, sort_order)
+VALUES ('hid_dogfood_local', 'sheet-pan-thighs', 'chicken thigh', 800, 'g', 0);
 
 INSERT INTO weeks (household_id, id, title, flex, list_name, origin, applied)
 VALUES (
@@ -81,6 +98,23 @@ VALUES (
 
 INSERT INTO week_dinners (household_id, week_id, position, meal_id)
 VALUES ('hid_dogfood_local', 'week-01', 0, 'butter-chicken');
+
+-- Sunday success-test week. Two dinners, both 800 g chicken thigh → 1600 g.
+INSERT INTO weeks (household_id, id, title, flex, list_name, origin, applied)
+VALUES (
+  'hid_dogfood_local',
+  'week-04',
+  'Week 4 — chicken/rice',
+  'leftover',
+  'Week 4 — chicken/rice',
+  'human',
+  1
+);
+
+INSERT INTO week_dinners (household_id, week_id, position, meal_id)
+VALUES
+  ('hid_dogfood_local', 'week-04', 0, 'butter-chicken'),
+  ('hid_dogfood_local', 'week-04', 1, 'sheet-pan-thighs');
 
 -- Seeded parent session for wrangler dev / Playwright.
 -- Cookie HMAC (fk_session=<id>.<hmac>) lands in PR-7. This PR stores the row

@@ -3,6 +3,7 @@ import { createWaitlist } from "./waitlist";
 import { createRules } from "./rules";
 import { createMembers } from "./members";
 import { createStamps } from "./stamps";
+import { createMealsCanon, createMealsWeeks } from "./meals";
 
 const app = new Hono<{ Bindings: Env }>();
 
@@ -18,6 +19,10 @@ app.route("/api/v1/household/members", createMembers());
 
 // Stamp create / get / put. No Accept, no inbox list, no kiosk (PR-8).
 app.route("/api/v1/stamps", createStamps());
+
+// Sunday list: meal canon + labelled weeks + named text export. No LLM.
+app.route("/api/v1/meals/canon", createMealsCanon());
+app.route("/api/v1/meals/weeks", createMealsWeeks());
 
 app.all("/api/*", (c) => c.json({ error: "not_found" }, 404));
 

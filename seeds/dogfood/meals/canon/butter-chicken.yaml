@@ -10,3 +10,6 @@ ingredients:
   - item: chicken thigh
     qty: 800
     unit: g
+  - item: yogurt
+    qty: 200
+    unit: g
