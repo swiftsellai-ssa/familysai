@@ -57,6 +57,8 @@ Until that HMAC exists, a test can:
 3. After PR-7: set `fk_session` to `sess_dogfood_local.<hmac>` using the local
    `SESSION_SECRET` from `.dev.vars`. Do not invent a production secret here.
 
+Until PR-7 HMAC wrapping, wrangler dev uses the raw id: set cookie `fk_session=sess_dogfood_local` (`document.cookie = 'fk_session=sess_dogfood_local; Path=/'`) then open `/app/rules`. No `AUTH=off`.
+
 To mint an extra local session later (still `--local` only):
 
 ```sql
