@@ -4,20 +4,20 @@ import { Calendar, BrainCircuit, HeartHandshake } from 'lucide-react';
 const features = [
     {
         icon: <Calendar className="w-8 h-8 text-purple-600" />,
-        title: "Smart Scheduling",
-        description: "Connects with everyone's calendars to find conflicts and suggest optimal times for family fun.",
+        title: "Meal weeks",
+        description: "Canon of dinners you already like. Pick a labelled week. Export a named text list for any shop.",
         color: "bg-purple-100"
     },
     {
         icon: <BrainCircuit className="w-8 h-8 text-blue-600" />,
-        title: "Proactive Suggestions",
-        description: "Notices when you're stressed and suggests quick wins: a 5-minute easy dinner or a quiet activity for the kids.",
+        title: "Homework gate",
+        description: "Printable rules. Kid fills title / used AI for / checked against. You Accept on your phone.",
         color: "bg-blue-100"
     },
     {
         icon: <HeartHandshake className="w-8 h-8 text-pink-600" />,
-        title: "Fair Share",
-        description: "Visibly tracks household contributions to ensure labor is shared fairly, reducing resentment.",
+        title: "Adult in the room",
+        description: "No kid account. No companion chat. Optional home LLM is a parent button and fails open.",
         color: "bg-pink-100"
     }
 ];
@@ -27,7 +27,7 @@ const FeatureCards = () => {
         <section id="features" className="py-20 px-6 bg-white/30 backdrop-blur-sm">
             <div className="max-w-6xl mx-auto">
                 <h2 className="text-3xl md:text-5xl font-bold text-center mb-16 text-slate-800">
-                    Features designed for sanity
+                    Two jobs. One household.
                 </h2>
 
                 <div className="grid md:grid-cols-3 gap-8">

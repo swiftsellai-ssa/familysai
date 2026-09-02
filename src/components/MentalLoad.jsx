@@ -7,10 +7,10 @@ const MentalLoad = () => {
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-16">
                     <h2 className="text-3xl md:text-5xl font-bold mb-4 text-slate-800">
-                        The Invisible Weight of Parenting
+                        What we refuse to automate
                     </h2>
                     <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-                        It's not just the chores. It's the planning, the remembering, and the constant decision fatigue.
+                        The chaos is real. A guardian app is the wrong fix.
                     </p>
                 </div>
 
@@ -22,15 +22,15 @@ const MentalLoad = () => {
                             <span className="p-2 bg-red-100 rounded-lg text-red-600">
                                 <X className="w-5 h-5" />
                             </span>
-                            Without Support
+                            Without this
                         </h3>
                         <ul className="space-y-4">
                             {[
-                                "Remembering doctor appointments",
-                                "Meal planning at 5 PM",
-                                "Constantly nagging about chores",
-                                "Forgetting school permission slips",
-                                "Feeling overwhelmed and alone"
+                                "School note in the bag, nobody type it in",
+                                "5pm — What's for dinner, with an empty list",
+                                "Kid used ChatGPT and you find out at submit time",
+                                "One parent is the household secretary",
+                                "Homework in the bedroom, phone in bed"
                             ].map((item, idx) => (
                                 <li key={idx} className="flex items-center gap-3 text-slate-600 opacity-80 decoration-slate-400">
                                     <span className="w-1.5 h-1.5 bg-red-400 rounded-full"></span>
@@ -47,15 +47,15 @@ const MentalLoad = () => {
                             <span className="p-2 bg-emerald-100 rounded-lg text-emerald-600">
                                 <Check className="w-5 h-5" />
                             </span>
-                            With FamilyAI
+                            With Family Kit
                         </h3>
                         <ul className="space-y-4">
                             {[
-                                "Auto-scheduled appointments & reminders",
-                                "Meal plans generated for you",
-                                "Gamified chores kids actually do",
-                                "Digital paperwork handler",
-                                "A calm, organized headspace"
+                                "Labelled week -> shopping list you subtract from",
+                                "House-rules card you can print",
+                                "Three-field stamp before anything is submitted",
+                                "Parent glance on the phone, kid never has login",
+                                "Quiet hours as a reminder, not surveillance"
                             ].map((item, idx) => (
                                 <li key={idx} className="flex items-start gap-3 text-slate-800 font-medium">
                                     <div className="p-1 bg-emerald-100 rounded-full mt-0.5">

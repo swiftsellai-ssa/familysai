@@ -118,10 +118,10 @@ const WaitlistForm = () => {
 
             <div className="max-w-2xl mx-auto text-center glass-panel p-8 md:p-14 rounded-[2rem]">
                 <h2 className="text-3xl md:text-4xl font-bold mb-6 text-slate-800">
-                    Ready to reclaim your peace?
+                    Want Sunday and school night on one origin?
                 </h2>
                 <p className="text-lg text-slate-600 mb-8">
-                    Join 2,000+ parents on the waitlist for early access.
+                    Leave an email. Dogfood is one household first.
                 </p>
 
                 {status === 'success' ? (
