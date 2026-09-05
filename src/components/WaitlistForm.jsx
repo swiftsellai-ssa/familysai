@@ -15,37 +15,87 @@ const WaitlistForm = () => {
     const [turnstileToken, setTurnstileToken] = useState('');
     const widgetContainerRef = useRef(null);
     const widgetIdRef = useRef(null);
+    const turnstileTokenRef = useRef('');
 
     const formVisible = status !== 'success';
+
+    const setToken = (token) => {
+        const next = typeof token === 'string' ? token : '';
+        turnstileTokenRef.current = next;
+        setTurnstileToken(next);
+    };
+
+    const readTurnstileToken = () => {
+        try {
+            if (widgetIdRef.current != null && window.turnstile?.getResponse) {
+                const live = window.turnstile.getResponse(widgetIdRef.current);
+                if (typeof live === 'string' && live) {
+                    turnstileTokenRef.current = live;
+                    return live;
+                }
+            }
+        } catch {
+            // Widget not ready yet.
+        }
+        const hidden = widgetContainerRef.current
+            ?.querySelector('input[name="cf-turnstile-response"]')
+            ?.value;
+        if (typeof hidden === 'string' && hidden) {
+            turnstileTokenRef.current = hidden;
+            return hidden;
+        }
+        return turnstileTokenRef.current;
+    };
 
     useEffect(() => {
         if (!formVisible || !TURNSTILE_SITE_KEY) return undefined;
 
         let cancelled = false;
+        let widgetId = null;
 
         const renderWidget = () => {
-            if (cancelled || !widgetContainerRef.current || !window.turnstile) return;
-            if (widgetIdRef.current != null) {
-                window.turnstile.reset(widgetIdRef.current);
-                return;
-            }
-            widgetIdRef.current = window.turnstile.render(widgetContainerRef.current, {
+            if (cancelled || widgetId != null) return;
+            if (!widgetContainerRef.current || !window.turnstile?.render) return;
+            const id = window.turnstile.render(widgetContainerRef.current, {
                 sitekey: TURNSTILE_SITE_KEY,
                 action: 'waitlist',
                 theme: 'light',
                 appearance: 'always',
-                callback: (token) => setTurnstileToken(token),
-                'expired-callback': () => setTurnstileToken(''),
-                'error-callback': () => setTurnstileToken(''),
+                size: 'flexible',
+                callback: (token) => {
+                    if (!cancelled) setToken(token);
+                },
+                'expired-callback': () => {
+                    if (!cancelled) setToken('');
+                },
+                'timeout-callback': () => {
+                    if (!cancelled) setToken('');
+                },
+                'error-callback': () => {
+                    if (cancelled) return;
+                    setToken('');
+                    setStatus((current) => (current === 'success' ? current : 'error'));
+                },
+                'retry-callback': () => {
+                    if (!cancelled) setToken('');
+                },
             });
+            if (id == null) return;
+            widgetId = id;
+            widgetIdRef.current = id;
         };
 
         const onScriptLoad = () => renderWidget();
-        let script = document.querySelector('script[data-fk-turnstile]');
-        if (window.turnstile) {
+        let script = document.querySelector(
+            'script[data-fk-turnstile], script[src*="challenges.cloudflare.com/turnstile"]',
+        );
+        if (window.turnstile?.render) {
             renderWidget();
         } else if (script) {
             script.addEventListener('load', onScriptLoad);
+            if (script.readyState === 'complete' || script.readyState === 'loaded') {
+                renderWidget();
+            }
         } else {
             script = document.createElement('script');
             script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
@@ -59,28 +109,37 @@ const WaitlistForm = () => {
         return () => {
             cancelled = true;
             if (script) script.removeEventListener('load', onScriptLoad);
-            if (widgetIdRef.current != null && window.turnstile) {
-                window.turnstile.remove(widgetIdRef.current);
+            if (widgetId != null && window.turnstile?.remove) {
+                window.turnstile.remove(widgetId);
+            }
+            if (widgetIdRef.current === widgetId) {
                 widgetIdRef.current = null;
             }
+            turnstileTokenRef.current = '';
         };
     }, [formVisible]);
 
     const resetTurnstile = () => {
-        setTurnstileToken('');
-        if (widgetIdRef.current != null && window.turnstile) {
+        setToken('');
+        if (widgetIdRef.current != null && window.turnstile?.reset) {
             window.turnstile.reset(widgetIdRef.current);
         }
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        const token = readTurnstileToken();
+        if (!token) {
+            setStatus('error');
+            return;
+        }
+
         setStatus('loading');
 
         try {
             const payload = {
                 email,
-                turnstileToken,
+                turnstileToken: token,
             };
             if (message.trim()) {
                 payload.message = message.trim();
@@ -101,7 +160,7 @@ const WaitlistForm = () => {
                 setStatus('success');
                 setEmail('');
                 setMessage('');
-                setTurnstileToken('');
+                setToken('');
             } else {
                 setStatus('error');
                 resetTurnstile();
@@ -168,7 +227,7 @@ const WaitlistForm = () => {
 
                         <button
                             type="submit"
-                            disabled={status === 'loading'}
+                            disabled={status === 'loading' || !turnstileToken}
                             className="w-full px-8 py-4 rounded-xl bg-indigo-600 text-white font-semibold text-lg shadow-lg hover:bg-indigo-700 hover:-translate-y-0.5 disabled:opacity-70 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2 min-h-[56px]"
                         >
                             {status === 'loading' ? (

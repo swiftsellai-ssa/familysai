@@ -60,7 +60,11 @@ export function createWaitlist() {
 		const rec = body as Record<string, unknown>;
 		const emailRaw = typeof rec.email === "string" ? rec.email.trim().toLowerCase() : "";
 		const messageRaw = typeof rec.message === "string" ? rec.message.trim() : "";
-		const turnstileToken = typeof rec.turnstileToken === "string" ? rec.turnstileToken : "";
+		const tokenFromBody =
+			(typeof rec.turnstileToken === "string" && rec.turnstileToken) ||
+			(typeof rec["cf-turnstile-response"] === "string" && rec["cf-turnstile-response"]) ||
+			"";
+		const turnstileToken = tokenFromBody.trim();
 
 		if (!isValidEmail(emailRaw)) {
 			return c.json(errorJson("validation", "A valid email is required."), 400);
@@ -88,7 +92,8 @@ export function createWaitlist() {
 				.first<{ count: number }>();
 			rateCount = rateRow?.count ?? 1;
 		} catch (err) {
-			console.log(JSON.stringify({ evt: "waitlist.rate_limit", ok: false }));
+			const detail = err instanceof Error ? err.message : String(err);
+			console.log(JSON.stringify({ evt: "waitlist.rate_limit", ok: false, detail }));
 			return c.json(errorJson("validation", "Waitlist is unavailable."), 503);
 		}
 
@@ -150,7 +155,8 @@ export function createWaitlist() {
 				console.log(JSON.stringify({ evt: "waitlist.insert", ok: true }));
 				return c.json({ ok: true });
 			}
-			console.log(JSON.stringify({ evt: "waitlist.insert", ok: false }));
+			const detail = err instanceof Error ? err.message : String(err);
+			console.log(JSON.stringify({ evt: "waitlist.insert", ok: false, detail }));
 			return c.json(errorJson("validation", "Waitlist is unavailable."), 503);
 		}
 

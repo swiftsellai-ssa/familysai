@@ -2,12 +2,16 @@
 	"$schema": "./node_modules/wrangler/config-schema.json",
 	"name": "family-kit",
 	"compatibility_date": "2026-08-28",
-	"compatibility_flags": ["nodejs_compat"],
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
 	"main": "./worker/index.ts",
 	"assets": {
 		"not_found_handling": "single-page-application",
 		"binding": "ASSETS",
-		"run_worker_first": ["/api/*"]
+		"run_worker_first": [
+			"/api/*"
+		]
 	},
 	"observability": {
 		"enabled": true,
@@ -30,8 +34,8 @@
 		{
 			"binding": "DB",
 			"database_name": "family-kit",
-			// database_id: run npx wrangler d1 create family-kit --location=oc then paste the UUID. Do not invent one. Local: wrangler d1 migrations apply family-kit --local. Remote apply after database_id exists (PR-1 ops).
-			"migrations_dir": "migrations"
+			"database_id": "9cb8c98f-27d2-4734-95c0-d21edf2f072f",
+			"remote": true
 		}
 	]
 }
