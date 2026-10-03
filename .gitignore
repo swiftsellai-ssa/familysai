@@ -22,3 +22,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local env files (real keys stay out of git)
+.env
+.env.*
+!.env.example

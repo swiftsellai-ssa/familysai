@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Send, CheckCircle } from 'lucide-react';
 
+// Web3Forms access key comes from the build environment, never from source.
+// Set VITE_WEB3FORMS_KEY in .env.local (local) or in your host's env settings.
+const WEB3FORMS_KEY = import.meta.env.VITE_WEB3FORMS_KEY;
+
 const WaitlistForm = () => {
     const [email, setEmail] = useState('');
     const [message, setMessage] = useState('');
@@ -8,6 +12,11 @@ const WaitlistForm = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!WEB3FORMS_KEY) {
+            console.error("Waitlist is not configured: VITE_WEB3FORMS_KEY is missing.");
+            setStatus('error');
+            return;
+        }
         setStatus('loading');
 
         try {
@@ -18,7 +27,7 @@ const WaitlistForm = () => {
                     "Accept": "application/json"
                 },
                 body: JSON.stringify({
-                    access_key: "ff55b387-3925-4b8e-9709-732d79b594fa", // Placeholder
+                    access_key: WEB3FORMS_KEY,
                     email: email,
                     message: message,
                     subject: "New Waitlist Submission (FamilyAI)"
